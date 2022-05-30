@@ -1,0 +1,29 @@
+---
+- hosts: bakery
+  user: root
+  become: yes
+  vars:
+    tmzone: America/Vancouver
+    sudo_timeout: 20
+    user: # redacted
+    user_password: # redacted
+    public_key: ~/.ssh/id_rsa.pub
+  roles: 
+   - setup
+   - docker
+
+- hosts: k8s_pis
+  user: root
+  become: yes
+  vars:
+    tbd: tbd
+  roles: 
+   - microk8s
+
+- hosts: servers
+  user: root
+  become: yes
+  vars:
+    tbd: tbd
+  roles: 
+   - plex

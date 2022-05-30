@@ -1,0 +1,29 @@
+---
+k8s_pis:
+  hosts:
+    blueberry:
+      ansible_host: 10.0.0.101
+    cherry:
+      ansible_host: 10.0.0.102
+    pumpkin:
+      ansible_host: 10.0.0.103
+
+standalone_pis:
+  hosts:
+    apple:
+      ansible_host: 10.0.0.100
+
+servers:
+  hosts:
+    sugarcookie:
+      ansible_host: 10.0.0.10
+
+pis:
+  children:
+    k8s_pis:
+    standalone_pis:
+
+bakery:
+  children:
+    pis:
+    servers:

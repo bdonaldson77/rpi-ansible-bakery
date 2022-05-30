@@ -1,0 +1,6 @@
+---
+- name: restart sshd
+  service:
+    name: sshd
+    state: restarted
+  when: reboot_required.stat.exists == false
