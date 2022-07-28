@@ -1,0 +1,159 @@
+---
+# This is an example playbook to execute inspec tests.
+# Tests need distributed to the appropriate ansible host/groups
+# prior to execution by `inspec exec`.
+
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: True
+  vars:
+    inspec_bin: /opt/inspec/bin/inspec
+    inspec_download_source_dir: /usr/local/src
+    inspec_test_directory: /tmp/molecule/inspec
+  tasks:
+    - name: Setting variables (CentOS 6 / RHEL 6 / Amazon Linux 2018)
+      set_fact:
+        inspec_download_url: "https://packages.chef.io/files/stable/inspec/3.9.3/el/6/inspec-3.9.3-1.el6.x86_64.rpm"
+        inspec_download_sha256sum: 36c8605f3c1a85acd4e2d54ab01b2737832af41126e307fece7989c6332ae534
+      when: (ansible_facts['os_family'] == "RedHat" and (ansible_facts['distribution_major_version'] == "6" or ansible_facts['distribution_major_version'] == "2018"))
+
+    - name: Setting variables (CentOS 7 / RHEL 7 / Amazon Linux 2)
+      set_fact:
+        inspec_download_url: "https://packages.chef.io/files/stable/inspec/3.9.3/el/7/inspec-3.9.3-1.el7.x86_64.rpm"
+        inspec_download_sha256sum: 4d54d12899c2eeaae4812cd13b8dfcae01ec1fd4a44f00cab77e31a57aea502b
+      when: (ansible_facts['os_family'] == "RedHat" and (ansible_facts['distribution_major_version'] == "7" or ansible_facts['distribution_major_version'] == "2"))
+
+    - name: Setting variables (Debian 8 / Ubuntu 14.04)
+      set_fact:
+        inspec_download_url: "https://packages.chef.io/files/stable/inspec/3.9.3/ubuntu/14.04/inspec_3.9.3-1_amd64.deb"
+        inspec_download_sha256sum: fe29d35fb95916b15310dc58787e63f22c4524be36a5c181307e08090cb0877d
+      when: (ansible_facts['os_family'] == "Debian" and (ansible_facts['distribution_major_version'] == "8" or ansible_facts['distribution_major_version'] == "14"))
+
+    - name: Setting variables (Debian 8 / Ubuntu 16.04)
+      set_fact:
+        inspec_download_url: "https://packages.chef.io/files/stable/inspec/3.9.3/ubuntu/16.04/inspec_3.9.3-1_amd64.deb"
+        inspec_download_sha256sum: 757dd2366a3932adc5fcc9382b30d77de6cc33152585f4c9f94f8918d9d349a7
+      when: (ansible_facts['os_family'] == "Debian" and (ansible_facts['distribution_major_version'] == "8" or ansible_facts['distribution_major_version'] == "16"))
+
+    - name: Setting variables (Debian 9 / Ubuntu 18.04)
+      set_fact:
+        inspec_download_url: "https://packages.chef.io/files/stable/inspec/3.9.3/ubuntu/18.04/inspec_3.9.3-1_amd64.deb"
+        inspec_download_sha256sum: 757dd2366a3932adc5fcc9382b30d77de6cc33152585f4c9f94f8918d9d349a7
+      when: (ansible_facts['os_family'] == "Debian" and (ansible_facts['distribution_major_version'] == "9" or ansible_facts['distribution_major_version'] == "18"))
+
+    - name: Setting varaibles (Windows 10)
+      set_fact:
+        inspec_download_url: "http://downloads.cinc.sh/files/stable/cinc-auditor/4.38.3/windows/2012r2/cinc-auditor-4.38.3-1-x64.msi"
+        inspec_download_sha256sum: f1164ab1ebf0a4b4c7b7dd051a140c6a0770f9be65c3cd8eace07416365adc89
+        inspec_bin: 'C:\cinc-project\cinc-auditor\bin\cinc-auditor.bat'
+        inspec_download_source_dir: 'C:\Windows\Temp'
+        inspec_test_directory: 'C:\Windows\Temp\molecule\inspec'
+      when: ansible_os_family == "Windows"
+
+    - name: Download Inspec
+      get_url:
+        url: "{{ inspec_download_url }}"
+        dest: "{{ inspec_download_source_dir }}"
+        sha256sum: "{{ inspec_download_sha256sum }}"
+        mode: 0755
+      when: ansible_os_family != "Windows"
+
+    - name: Install Inspec (apt)
+      apt:
+        deb: "{{ inspec_download_source_dir }}/{{ inspec_download_url.split('/')[-1] }}"
+        state: present
+      when: ansible_os_family != "Windows" and ansible_pkg_mgr == "apt"
+
+    - name: Install Inspec (yum)
+      yum:
+        name: "{{ inspec_download_source_dir }}/{{ inspec_download_url.split('/')[-1] }}"
+        state: present
+      when: ansible_os_family != "Windows" and ansible_pkg_mgr == "yum"
+
+    - name: Install Inspec (windows)
+      win_package:
+        path: "{{ inspec_download_url }}"
+        state: present
+      when: ansible_os_family == "Windows"
+
+    - name: Create inspec test directory
+      file:
+        path: "{{ inspec_test_directory }}"
+        state: directory
+      when: ansible_os_family != "Windows"
+
+    - name: Create inspec test directory
+      win_file:
+        path: "{{ inspec_test_directory }}"
+        state: directory
+      when: ansible_os_family == "Windows"
+
+    - name: Copy inspec test directories (Linux)
+      file:
+        path: "{{ inspec_test_directory }}/{{ item.path }}"
+        state: directory
+        mode: 0755
+      with_filetree: "{{ lookup('env', 'MOLECULE_VERIFIER_TEST_DIRECTORY') }}/"
+      when: ansible_os_family != "Windows" and item.state == 'directory'
+
+    - debug: 
+        msg: "{{ lookup('env', 'MOLECULE_VERIFIER_TEST_DIRECTORY') }}/"
+
+    # - name: Copy inspec test directories (Windows)
+    #   win_file:
+    #     path: "{{ inspec_test_directory }}/{{ item.path }}"
+    #     state: directory
+    #   with_filetree: "{{ lookup('env', 'MOlECULE_VERIFIER_TEST_DIRECTORY') }}/"
+    #   when: ansible_os_family == "Windows" and item.state == 'directory'
+
+    - name: Copy inspec test files (Linux)
+      copy:
+        src: "{{ item.src }}"
+        dest: "{{ inspec_test_directory }}/{{ item.path }}"
+        mode: 0644
+      with_filetree: "{{ lookup('env', 'MOLECULE_VERIFIER_TEST_DIRECTORY') }}/"
+      when: ansible_os_family != "Windows" and item.state == 'file'
+
+    - name: Copy inspec test files (Windows)
+      win_copy:
+        src: "{{ item.src }}"
+        dest: "{{ inspec_test_directory }}/{{ item.path }}"
+      with_filetree: "{{ lookup('env', 'MOLECULE_VERIFIER_TEST_DIRECTORY') }}/"
+      when: ansible_os_family == "Windows" and item.state == 'file'
+
+    - name: Execute Inspec tests (Linux)
+      block:
+        - name: Execute Inspec tests
+          command: "{{ inspec_bin }} exec --no-color {{ inspec_test_directory }}"
+          register: test_results
+          ignore_errors: true
+
+        - name: Display details about the Inspec results
+          debug:
+            msg: "{{ test_results.stdout_lines }}"
+
+        - name: Fail when tests fail
+          fail:
+            msg: "Inspec failed to validate"
+          when: test_results.rc != 0
+      when: ansible_os_family != "Windows"
+
+    - name: Execute Inspec tests (Windows)
+      block:
+        - name: Execute Inspec tests
+          win_command: "{{ inspec_bin }} exec --no-color {{ inspec_test_directory }}"
+          register: test_results
+          ignore_errors: true
+
+        - name: Display details about the Inspec results
+          debug:
+            msg: "{{ test_results.stdout_lines }}"
+
+        - name: Fail when tests fail
+          fail:
+            msg: "Inspec failed to validate"
+          when: test_results.rc != 0
+      when: ansible_os_family == "Windows" 
+
+    

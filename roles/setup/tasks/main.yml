@@ -1,9 +1,13 @@
 ---
+# tasks file for setup
+- name: Include OS-specific variables.
+  include_vars: "{{ ansible_os_family }}.yaml"
+
 - name: Get datestamp from the system
   shell: date +"%Y%m%d"
   register: dstamp
 
-- name: Set current date stamp varible
+- name: Set current date stamp variable
   set_fact:
     cur_date: "{{ dstamp.stdout }}"
 
@@ -12,6 +16,7 @@
   apt:
     update_cache: yes
     cache_valid_time: 3600
+  become: yes
 
 - name: Upgrade installed apt packages 
   apt:
@@ -20,6 +25,7 @@
   retries: 15
   delay: 5
   until: upgrade is success
+  become: yes
 
 - name: Ensure that these software packages are installed
   apt:
@@ -39,22 +45,26 @@
       - virtualenv
       - wget
     state: latest
+  become: yes
 
 # Host Setup
-- name: Set static hostname
-  hostname:
-    name: "{{ inventory_hostname_short }}"
-
-- name: Add FQDN to /etc/hosts
-  lineinfile:
-    dest: /etc/hosts
-    regexp: '^127\.0\.0\.1'
-    line: '127.0.0.1 {{ inventory_hostname }} {{ inventory_hostname_short }}'
-    state: present
+#- name: Set static hostname
+#  hostname:
+#    name: "{{ inventory_hostname_short }}"
+#  become: yes
+#
+#- name: Add FQDN to /etc/hosts
+#  lineinfile:
+#    dest: /etc/hosts
+#    regexp: '^127\.0\.0\.1'
+#    line: '127.0.0.1 {{ inventory_hostname }} {{ inventory_hostname_short }}'
+#    state: present
+#  become: yes
 
 - name: set timezone
   timezone:
     name: "{{ tmzone }}"
+  become: yes
 
 # Set sudo password timeout (default is 15 minutes)
 - name: Set sudo password timeout.
@@ -64,6 +74,7 @@
     regexp: '^Defaults\tenv_reset'
     line: 'Defaults env_reset, timestamp_timeout={{ sudo_timeout }}'
     validate: '/usr/sbin/visudo -cf %s'
+  become: yes
 
 - name: Create/update regular user with sudo privileges
   user:
@@ -73,23 +84,14 @@
     groups: sudo
     append: true
     shell: /bin/bash
+  become: yes
 
 - name: Ensure authorized keys for remote user is installed
   authorized_key:
     user: "{{ user }}"
     state: present
     key: "{{ public_key }}"
-
-- name: Ensure authorized key for root user is installed
-  authorized_key:
-    user: root
-    state: present
-    key: "{{ ssh_pub_key }}"
-
-- name: Update root user password.
-  user:
-    name: root
-    password: "{{ root_password }}"
+  become: yes
 
 - name: Disable password authentication for root
   lineinfile:
@@ -99,6 +101,7 @@
     line: 'PermitRootLogin prohibit-password'
   notify:
     - restart sshd
+  become: yes
 
 - name: Disable tunneled clear-text passwords
   lineinfile:
@@ -108,6 +111,7 @@
     line: 'PasswordAuthentication no'
   notify:
     - restart sshd
+  become: yes
 
 - name: Set user PS1 to a two-line prompt
   lineinfile:
@@ -115,6 +119,7 @@
     insertafter: EOF
     line: "PS1='${debian_chroot:+($debian_chroot)}\\[\\033[01;32m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\n\\$ '"
     state: present
+  become: yes
 
 - name: Set root PS1 to a two-line prompt
   lineinfile:
@@ -122,11 +127,13 @@
     state: present
     insertafter: EOF
     line: PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\n\$ '
+  become: yes
 
 # Configure a firewall
 - name: Disable and reset ufw firewall to installation defaults.
   ufw:
     state: reset
+  become: yes
 
 - name: Find backup rules to delete
   find:
@@ -134,12 +141,14 @@
     patterns: "*.{{ cur_date }}_*"
     use_regex: no
   register: files_to_delete
+  become: yes
 
 - name: Delete ufw backup rules
   file:
     path: "{{ item.path }}"
     state: absent
   with_items: "{{ files_to_delete.files }}"
+  become: yes
 
 - name: Allow ssh port '{{ ssh_port }}'.
   ufw:
@@ -147,14 +156,18 @@
     proto: tcp
     port: '{{ ssh_port }}'
     state: enabled
+  become: yes
 
 - name: Turn UFW logging off
   ufw:
     logging: "off"
+  become: yes
 
-- name: run needrestart
-  command: needrestart -r a
-  when: not reboot_required.stat.exists and upgrade.changed
+- name: Check if reboot is required
+  stat:
+    path: /var/run/reboot-required
+  register: reboot_required
+  become: yes
 
 - name: Reboot the server if needed
   reboot:
@@ -165,12 +178,15 @@
     post_reboot_delay: 30
     test_command: whoami
   when: reboot_required.stat.exists
+  become: yes
 
 - name: Remove old packages from the cache
   apt:
     autoclean: yes
+  become: yes
 
 - name: Remove dependencies that are no longer needed
   apt:
     autoremove: yes
     purge: yes
+  become: yes

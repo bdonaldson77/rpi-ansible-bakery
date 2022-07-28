@@ -5,8 +5,8 @@
   vars:
     tmzone: America/Vancouver
     sudo_timeout: 20
-    user: # redacted
-    user_password: # redacted
+    user: baker
+    user_password: $6$200UMz2ReR3phhLd$uJFIpduabaa4FtTWmea6EkiB3.hQ7B88E1hDd.faeOBxv3RJX8pJC.35EVvzlHCPXxQjZrPsq7LgAng57HNVk0
     public_key: ~/.ssh/id_rsa.pub
   roles: 
    - setup
