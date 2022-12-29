@@ -42,7 +42,7 @@
         inspec_download_sha256sum: 757dd2366a3932adc5fcc9382b30d77de6cc33152585f4c9f94f8918d9d349a7
       when: (ansible_facts['os_family'] == "Debian" and (ansible_facts['distribution_major_version'] == "9" or ansible_facts['distribution_major_version'] == "18"))
 
-    - name: Setting varaibles (Windows 10)
+    - name: Setting variables (Windows 10)
       set_fact:
         inspec_download_url: "http://downloads.cinc.sh/files/stable/cinc-auditor/4.38.3/windows/2012r2/cinc-auditor-4.38.3-1-x64.msi"
         inspec_download_sha256sum: f1164ab1ebf0a4b4c7b7dd051a140c6a0770f9be65c3cd8eace07416365adc89
