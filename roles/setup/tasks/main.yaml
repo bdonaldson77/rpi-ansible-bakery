@@ -28,8 +28,10 @@
       - ca-certificates
       - curl
       - git
+      - htop
       - nano
       - needrestart
+      - net-tools
       - pwgen
       - python3-pip
       - python3-setuptools
