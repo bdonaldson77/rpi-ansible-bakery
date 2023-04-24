@@ -1,12 +1,9 @@
 ---
 k8s_pis:
   hosts:
-    blueberry:
-      ansible_host: 10.0.0.101
-    cherry:
-      ansible_host: 10.0.0.102
-    pumpkin:
-      ansible_host: 10.0.0.103
+    blueberry.bakery:
+    cherry.bakery:
+    pumpkin.bakery:
 
 #standalone_pis:
 #  hosts:
