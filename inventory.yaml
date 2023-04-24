@@ -8,20 +8,20 @@ k8s_pis:
     pumpkin:
       ansible_host: 10.0.0.103
 
-standalone_pis:
-  hosts:
-    apple:
-      ansible_host: 10.0.0.100
+#standalone_pis:
+#  hosts:
+#    apple:
+#      ansible_host: 10.0.0.100
 
 servers:
   hosts:
     sugarcookie:
-      ansible_host: 10.0.0.10
+      ansible_host: 10.0.0.69
 
 pis:
   children:
     k8s_pis:
-    standalone_pis:
+#    standalone_pis:
 
 bakery:
   children:
