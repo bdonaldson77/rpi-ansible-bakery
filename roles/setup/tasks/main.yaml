@@ -2,10 +2,16 @@
 - name: Get datestamp from the system
   shell: date +"%Y%m%d"
   register: dstamp
+  changed_when: false
 
 - name: Set current date stamp varible
   set_fact:
     cur_date: "{{ dstamp.stdout }}"
+
+- name: Check for first run
+  stat:
+    path: /var/run/bootstrapped
+  register: already_bootstrapped
 
 # Update and install the base software
 - name: Update apt package cache
@@ -17,7 +23,7 @@
   apt:
     upgrade: dist
   register: upgrade
-  retries: 15
+  retries: 3
   delay: 5
   until: upgrade is success
 
@@ -28,8 +34,10 @@
       - ca-certificates
       - curl
       - git
+      - htop
       - nano
       - needrestart
+      - net-tools
       - pwgen
       - python3-pip
       - python3-setuptools
@@ -39,6 +47,12 @@
       - virtualenv
       - wget
     state: latest
+
+# Pi Setup
+- name: Fix console HDMI output on RPi
+  copy:
+    dest: /boot/firmware/config.txt
+    content: "{{ lookup('file', 'config.txt') }}"
 
 # Host Setup
 - name: Set static hostname
@@ -52,12 +66,12 @@
     line: '127.0.0.1 {{ inventory_hostname }} {{ inventory_hostname_short }}'
     state: present
 
-- name: set timezone
+- name: Set Timezone
   timezone:
     name: "{{ tmzone }}"
 
 # Set sudo password timeout (default is 15 minutes)
-- name: Set sudo password timeout.
+- name: Set sudo password timeout
   lineinfile:
     path: /etc/sudoers
     state: present
@@ -78,13 +92,13 @@
   authorized_key:
     user: "{{ user }}"
     state: present
-    key: "{{ public_key }}"
+    key: "{{ lookup('file', ssh_pub_key) }}"
 
 - name: Ensure authorized key for root user is installed
   authorized_key:
     user: root
     state: present
-    key: "{{ ssh_pub_key }}"
+    key: "{{ lookup('file', ssh_root_pub_key) }}"
 
 - name: Update root user password.
   user:
@@ -124,33 +138,42 @@
     line: PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\n\$ '
 
 # Configure a firewall
-- name: Disable and reset ufw firewall to installation defaults.
-  ufw:
-    state: reset
+- name: Manage the firewall
+  block:      
+    - name: Disable and reset ufw firewall to installation defaults.
+      when: not already_bootstrapped.stat.exists
+      ufw:
+        state: reset
 
-- name: Find backup rules to delete
-  find:
-    paths: /etc/ufw
-    patterns: "*.{{ cur_date }}_*"
-    use_regex: no
-  register: files_to_delete
+    - name: Find backup rules to delete
+      find:
+        paths: /etc/ufw
+        patterns: "*.{{ cur_date }}_*"
+        use_regex: no
+      register: files_to_delete
 
-- name: Delete ufw backup rules
-  file:
-    path: "{{ item.path }}"
-    state: absent
-  with_items: "{{ files_to_delete.files }}"
+    - name: Delete ufw backup rules
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ files_to_delete.files }}"
 
-- name: Allow ssh port '{{ ssh_port }}'.
-  ufw:
-    rule: allow
-    proto: tcp
-    port: '{{ ssh_port }}'
-    state: enabled
+    - name: Allow ssh port '{{ ssh_port }}'.
+      ufw:
+        rule: allow
+        proto: tcp
+        port: '{{ ssh_port }}'
+        state: enabled
 
-- name: Turn UFW logging off
-  ufw:
-    logging: "off"
+    - name: Turn UFW logging off
+      ufw:
+        logging: "off"
+
+
+- name: Check if a reboot is needed for Debian-based systems
+  stat:
+    path: /var/run/reboot-required
+  register: reboot_required
 
 - name: run needrestart
   command: needrestart -r a
@@ -174,3 +197,8 @@
   apt:
     autoremove: yes
     purge: yes
+
+- name: Mark first run complete
+  when: not already_bootstrapped.stat.exists
+  shell: touch /var/run/bootstrapped
+  
