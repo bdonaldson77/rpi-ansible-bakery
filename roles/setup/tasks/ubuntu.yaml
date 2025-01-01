@@ -1,0 +1,44 @@
+---
+# Update and install the base software
+- name: Update apt package cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Upgrade installed apt packages 
+  apt:
+    upgrade: dist
+  register: upgrade
+  retries: 3
+  delay: 5
+  until: upgrade is success
+
+- name: Ensure that required software packages are installed and updated
+  apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - git
+      - htop
+      - nano
+      - needrestart
+      - net-tools
+      - pwgen
+      - python3-pip
+      - python3-setuptools
+      - software-properties-common
+      - unbound
+      - unzip
+      - virtualenv
+      - wget
+    state: latest
+
+- name: Remove old packages from the cache
+  apt:
+    autoclean: yes
+
+- name: Remove dependencies that are no longer needed
+  apt:
+    autoremove: yes
+    purge: yes

@@ -10,13 +10,13 @@ k8s_pis:
 
 standalone_pis:
   hosts:
-    apple:
+    apple.bakery:
       ansible_host: 10.0.0.100
 
 servers:
   hosts:
-    sugarcookie:
-      ansible_host: 10.0.0.10
+    sugarcookie.bakery:
+      ansible_host: 10.0.0.69
 
 pis:
   children:

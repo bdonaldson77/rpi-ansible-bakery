@@ -7,8 +7,30 @@
     sudo_timeout: 20
     ssh_port: 22
   roles: 
-   - setup
-   - docker
+    - setup
+    - docker
+    #- role: istvano.microk8s
+    #  vars:
+    #      microk8s_group_HA: servers
+    #      microk8s_group_WORKERS: k8s_pis
+    #      microk8s_plugins:
+    #        dns: "10.0.0.100"
+    #        ingress: true
+    #        metrics-server: false
+    #        cert-manager: true
+    #        openebs: true       
+    #        portainer: true
+    #        helm3: true
+
+- hosts: standalone_pis
+  user: baker
+  become: yes
+  vars:
+    tmzone: America/Vancouver
+    sudo_timeout: 20
+    ssh_port: 22
+  roles: 
+  #  - setup
 
 #- hosts: k8s_pis
 #  user: root

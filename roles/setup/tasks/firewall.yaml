@@ -1,0 +1,39 @@
+---
+# Configure a firewall
+- name: Disable and reset ufw firewall to installation defaults.
+  when: not already_bootstrapped.stat.exists
+  ufw:
+    state: reset
+
+- name: Find backup rules to delete
+  find:
+    paths: /etc/ufw
+    patterns: "*.{{ cur_date }}_*"
+    use_regex: no
+  register: files_to_delete
+
+- name: Delete ufw backup rules
+  file:
+    path: "{{ item.path }}"
+    state: absent
+  with_items: "{{ files_to_delete.files }}"
+
+- name: Allow ssh port '{{ ssh_port }}'.
+  ufw:
+    rule: allow
+    proto: tcp
+    port: '{{ ssh_port }}'
+    state: enabled
+
+- name: Allow extra ports
+  when: port_list is defined
+  ufw:
+    rule: allow
+    proto: any
+    port: '{{ item }}'
+    state: enabled
+  loop: "{{ port_list }}"
+
+- name: Turn UFW logging off
+  ufw:
+    logging: "off"

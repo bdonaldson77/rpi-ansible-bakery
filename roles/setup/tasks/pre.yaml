@@ -1,0 +1,19 @@
+---
+- name: Get datestamp from the system
+  shell: date +"%Y%m%d"
+  register: dstamp
+  changed_when: false
+
+- name: Set current date stamp varible
+  set_fact:
+    cur_date: "{{ dstamp.stdout }}"
+
+- name: Check for first run
+  stat:
+    path: /var/run/bootstrapped
+  register: already_bootstrapped
+
+- name: Check if running on a Pi
+  shell: "uname -r"
+  register: uname
+  changed_when: false
