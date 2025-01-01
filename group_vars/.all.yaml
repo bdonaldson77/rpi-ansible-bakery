@@ -1,0 +1,6 @@
+---
+# user: <configured username>
+# user_password: <hashed user password>
+# root_password: <hashed root password>
+# ssh_pub_key: <path to ssh key for user>
+# ssh_root_pub_key: <path to ssh key for root>

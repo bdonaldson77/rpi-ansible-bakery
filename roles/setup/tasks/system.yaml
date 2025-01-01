@@ -1,0 +1,83 @@
+---
+# Host Setup
+- name: Set static hostname
+  hostname:
+    name: "{{ inventory_hostname_short }}"
+
+- name: Add FQDN to /etc/hosts
+  lineinfile:
+    dest: /etc/hosts
+    regexp: '^127\.0\.0\.1'
+    line: '127.0.0.1 {{ inventory_hostname }} {{ inventory_hostname_short }}'
+    state: present
+
+- name: Set Timezone
+  timezone:
+    name: "{{ tmzone }}"
+
+# Set sudo password timeout (default is 15 minutes)
+- name: Set sudo password timeout
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^Defaults\tenv_reset'
+    line: 'Defaults env_reset, timestamp_timeout={{ sudo_timeout }}'
+    validate: '/usr/sbin/visudo -cf %s'
+
+- name: Create/update regular user with sudo privileges
+  user:
+    name: "{{ user }}"
+    password: "{{ user_password }}"
+    state: present
+    groups: sudo
+    append: true
+    shell: /bin/bash
+
+- name: Ensure authorized keys for remote user is installed
+  authorized_key:
+    user: "{{ user }}"
+    state: present
+    key: "{{ lookup('file', ssh_pub_key) }}"
+
+- name: Ensure authorized key for root user is installed
+  authorized_key:
+    user: root
+    state: present
+    key: "{{ lookup('file', ssh_root_pub_key) }}"
+
+- name: Update root user password.
+  user:
+    name: root
+    password: "{{ root_password }}"
+
+- name: Disable password authentication for root
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin prohibit-password'
+  notify:
+    - restart sshd
+
+- name: Disable tunneled clear-text passwords
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    state: present
+    regexp: '^#?PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+  notify:
+    - restart sshd
+
+- name: Set user PS1 to a two-line prompt
+  lineinfile:
+    dest: "/home/{{ user }}/.bashrc"
+    insertafter: EOF
+    line: "PS1='${debian_chroot:+($debian_chroot)}\\[\\033[01;32m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\n\\$ '"
+    state: present
+
+- name: Set root PS1 to a two-line prompt
+  lineinfile:
+    path: '/root/.bashrc'
+    state: present
+    insertafter: EOF
+    line: PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\n\$ '

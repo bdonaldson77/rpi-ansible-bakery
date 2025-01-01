@@ -1,27 +1,28 @@
 ---
-- hosts: k8s_pis
-  user: baker
+- hosts: bakery
+  user: "{{ user }}"
   become: yes
   vars:
     tmzone: America/Vancouver
     sudo_timeout: 20
     ssh_port: 22
   roles: 
-   - setup
-   - docker
+    - setup
+    - docker
 
 #- hosts: k8s_pis
-#  user: root
+#  user: "{{ user }}"
 #  become: yes
-#  vars:
-#    tbd: tbd
 #  roles: 
-#   - microk8s
-
-#- hosts: servers
-#  user: root
-#  become: yes
-#  vars:
-#    tbd: tbd
-#  roles: 
-#   - plex
+#    - role: istvano.microk8s
+#      vars:
+#          microk8s_group_HA: servers
+#          microk8s_group_WORKERS: k8s_pis
+#          microk8s_plugins:
+#            dns: "10.0.0.100"
+#            ingress: true
+#            metrics-server: false
+#            cert-manager: true
+#            openebs: true       
+#            portainer: true
+#            helm3: true

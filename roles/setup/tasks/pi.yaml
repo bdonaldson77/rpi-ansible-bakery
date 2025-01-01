@@ -1,0 +1,6 @@
+---
+# Pi Setup
+- name: Fix console HDMI output on RPi
+  copy:
+    dest: /boot/firmware/config.txt
+    content: "{{ lookup('file', 'config.txt') }}"
