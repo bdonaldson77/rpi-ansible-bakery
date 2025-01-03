@@ -1,3 +1,6 @@
 ---
 port_list:
   - 10250
+microk8s_plugins:
+  dns: "10.0.0.100"
+  openebs: true
