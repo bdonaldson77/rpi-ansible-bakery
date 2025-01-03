@@ -1,0 +1,10 @@
+---
+microk8s_plugins:
+  dns: "10.0.0.100"
+  ingress: true
+  metrics-server: true
+  cert-manager: true
+  openebs: true       
+  portainer: true
+  observability: true
+  helm3: true

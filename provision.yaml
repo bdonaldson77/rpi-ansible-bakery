@@ -10,19 +10,11 @@
     - setup
     - docker
 
-#- hosts: k8s_pis
-#  user: "{{ user }}"
-#  become: yes
-#  roles: 
-#    - role: istvano.microk8s
-#      vars:
-#          microk8s_group_HA: servers
-#          microk8s_group_WORKERS: k8s_pis
-#          microk8s_plugins:
-#            dns: "10.0.0.100"
-#            ingress: true
-#            metrics-server: false
-#            cert-manager: true
-#            openebs: true       
-#            portainer: true
-#            helm3: true
+- hosts: servers, k8s_pis
+  user: "{{ user }}"
+  become: yes
+  roles: 
+    - role: istvano.microk8s
+      vars:
+        microk8s_group_HA: servers
+        microk8s_group_WORKERS: k8s_pis
