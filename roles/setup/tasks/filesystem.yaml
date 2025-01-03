@@ -1,0 +1,16 @@
+---
+- name: Install required nfs mount helper
+  apt:
+    pkg:
+      - nfs-common
+    state: latest
+  when: ansible_os_family == "Debian"
+
+- name: Mount NFS volume 
+  ansible.posix.mount:
+    src: "{{ item.source }}"
+    path: "{{ item.path }}"
+    opts: "{{ item.opts }}"
+    state: mounted
+    fstype: nfs
+  loop: "{{ mounts }}"

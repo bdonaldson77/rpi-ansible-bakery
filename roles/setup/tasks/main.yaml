@@ -16,5 +16,8 @@
   include_tasks: firewall.yaml
   when: uname.stdout | regex_search('raspi')
 
+- name: Filesystem config
+  include_tasks: filesystem.yaml
+  when: mounts is defined
 - name: Post-run setup
   include_tasks: post.yaml
