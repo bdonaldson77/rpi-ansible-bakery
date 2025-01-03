@@ -4,7 +4,7 @@ microk8s_plugins:
   ingress: true
   metrics-server: true
   cert-manager: true
-  openebs: true       
+  openebs: true
   portainer: true
   observability: true
   helm3: true

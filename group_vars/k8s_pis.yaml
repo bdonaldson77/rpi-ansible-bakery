@@ -3,4 +3,12 @@ port_list:
   - 10250
 microk8s_plugins:
   dns: "10.0.0.100"
-  openebs: true
+mounts:
+  - name: "configs"
+    source: "10.0.0.199:/backup/bakery-configs"
+    path: "/mnt/configs"
+    opts: "auto,nofail,noatime,nolock,intr,tcp,_netdev,actimeo=1800"
+  - name: "plexmedia"
+    source: "10.0.0.199:/cooling-rack/plex"
+    path: "/mnt/plexmedia"
+    opts: "auto,nofail,noatime,nolock,intr,tcp,_netdev,actimeo=1800"
