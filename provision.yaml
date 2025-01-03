@@ -1,7 +1,7 @@
 ---
 - hosts: bakery
   user: "{{ user }}"
-  become: yes
+  become: true
   vars:
     tmzone: America/Vancouver
     sudo_timeout: 20
@@ -12,7 +12,7 @@
 
 - hosts: servers, k8s_pis
   user: "{{ user }}"
-  become: yes
+  become: true
   roles: 
     - role: istvano.microk8s
       vars:

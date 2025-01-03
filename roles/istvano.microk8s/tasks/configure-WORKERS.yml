@@ -41,7 +41,7 @@
       - "'already known to dqlite' not in join_command_output.stdout"
       - join_command_output.rc > 0
 
-  become: yes
+  become: true
   when:
     - inventory_hostname != designated_host
     - inventory_hostname in groups[microk8s_group_WORKERS]

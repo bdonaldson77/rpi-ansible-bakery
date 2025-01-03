@@ -17,7 +17,7 @@
   with_items: "{{ user_info.results }}"
 
 - name: add user to group
-  become: yes
+  become: true
   command: "usermod -a -G microk8s {{ user }}"
   changed_when: true
   with_items: '{{ users }}'
@@ -26,7 +26,7 @@
     label: '{{ user }}'
 
 - name: Create .kube folder for the user
-  become: yes
+  become: true
   become_user: '{{ user }}'
   file:
     path: "{{ user_info_dict[user]['home'] }}/.kube"
@@ -40,7 +40,7 @@
     label: '{{ user }}'
 
 - name: create kubectl config
-  become: yes
+  become: true
   changed_when: true
   shell: microk8s config > {{ user_info_dict[user]['home'] }}/.kube/config
   args:
@@ -51,7 +51,7 @@
     label: '{{ user }}'
 
 - name: reaffirm permission on files
-  become: yes
+  become: true
   file:
     path: "{{ user_info_dict[user]['home'] }}/.kube"
     state: directory
@@ -65,7 +65,7 @@
     label: '{{ user }}'
 
 - name: add helm repository to user
-  become: yes
+  become: true
   become_user: '{{ item.0 }}'
   shell: "helm repo add {{ item.1.name }} {{ item.1.url }}"
   args:
@@ -77,7 +77,7 @@
   when: microk8s_plugins.helm3
 
 - name: update helm repos
-  become: yes
+  become: true
   become_user: '{{ user }}'
   shell: "helm repo update"
   args:
