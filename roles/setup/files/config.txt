@@ -24,13 +24,19 @@ dtparam=spi=on
 # support audio output)
 #hdmi_drive=2
 
-# Fixes output for rack display
+# Fixes output for 1080p KVM
 hdmi_group=2
-hdmi_mode=87
-hdmi_timings=480 0 40 10 80 800 0 13 3 32 0 0 0 60 0 32000000 3
-dtoverlay=ads7846,cs=1,penirq=25,penirq_pull=2,speed=50000,keep_vref_on=0,swapxy=0,pmax=255,xohms=150,xmin=200,xmax=3900,ymin=200,ymax=3900
+hdmi_mode=82
 hdmi_drive=1
 hdmi_force_hotplug=1
+
+# Fixes output for rack display
+#hdmi_group=2
+#hdmi_mode=87
+#hdmi_timings=480 0 40 10 80 800 0 13 3 32 0 0 0 60 0 32000000 3
+#dtoverlay=ads7846,cs=1,penirq=25,penirq_pull=2,speed=50000,keep_vref_on=0,swapxy=0,pmax=255,xohms=150,xmin=200,xmax=3900,ymin=200,ymax=3900
+#hdmi_drive=1
+#hdmi_force_hotplug=1
 
 # Enable the serial pins
 enable_uart=1

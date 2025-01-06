@@ -1,0 +1,11 @@
+---
+- name: Copy templated script file to machine
+  ansible.builtin.template:
+    src: templates/ip_fix.j2
+    dest: /tmp/ip_fix.sh
+  become: true
+
+- name: Fix microk8s IP binding for nginx ingress
+  ansible.builtin.shell:
+    cmd: sh /tmp/ip_fix.sh
+  become: true
