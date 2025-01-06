@@ -18,3 +18,4 @@
       vars:
         microk8s_group_HA: servers
         microk8s_group_WORKERS: k8s_pis
+    - microk8s_fix
