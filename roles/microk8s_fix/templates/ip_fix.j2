@@ -9,7 +9,7 @@ sed -e "s/\(\- \-\-publish-status-address=\).*/\1$LOCAL_ADDR/g" $SRCTMPFILE > $N
 if [ ! "" = "$(diff -q $NEWTMPFILE $SRCTMPFILE)" ]; then
 	echo Updating publish status address
 	diff $SRCTMPFILE $NEWTMPFILE
-	#kubectl apply -f $NEWTMPFILE
+	kubectl apply -f $NEWTMPFILE
 fi
 
 rm $SRCTMPFILE

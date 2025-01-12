@@ -1,4 +1,5 @@
 ---
+k8s_host: false
 port_list:
   - 80
   - 443

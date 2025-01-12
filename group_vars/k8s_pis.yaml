@@ -1,4 +1,6 @@
 ---
+add_workers_to_hostfile: true
+k8s_host: true
 port_list:
   - 10250
 microk8s_plugins:
