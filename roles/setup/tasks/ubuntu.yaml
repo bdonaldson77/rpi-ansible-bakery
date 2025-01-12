@@ -20,7 +20,9 @@
       - ca-certificates
       - curl
       - git
+      - btop
       - htop
+      - iptables-persistent
       - nano
       - needrestart
       - net-tools
@@ -42,3 +44,21 @@
   apt:
     autoremove: yes
     purge: yes
+
+- name: Disable DNS forwarding with systemd-resolved
+  block:
+    - name: Create folder for overriding config
+      ansible.builtin.file:
+        path: /etc/systemd/resolved.conf.d/
+        state: directory 
+        mode: 0775
+    - name: Copy over config file
+      copy:
+        dest: /etc/systemd/resolved.conf.d/noresolved.conf
+        content: "{{ lookup('file', 'noresolved.conf') }}"
+      register: updated_config
+    - name: Restart resolved to get new options
+      systemd:
+        name: systemd-resolved.service
+        state: restarted
+      when: updated_config.changed

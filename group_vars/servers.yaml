@@ -1,4 +1,6 @@
 ---
+add_workers_to_hostfile: true
+k8s_host: true
 microk8s_plugins:
   dns: "10.0.0.100"
   ingress: true

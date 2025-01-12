@@ -1,39 +1,61 @@
 ---
 # Configure a firewall
-- name: Disable and reset ufw firewall to installation defaults.
-  when: not already_bootstrapped.stat.exists
+- name: Configure firewall for hosts not running kubernetes
+  block: 
+    - name: Disable and reset ufw firewall to installation defaults.
+      when: not already_bootstrapped.stat.exists
+      ufw:
+        state: reset
+
+    - name: Find backup rules to delete
+      find:
+        paths: /etc/ufw
+        patterns: "*.{{ cur_date }}_*"
+        use_regex: no
+      register: files_to_delete
+
+    - name: Delete ufw backup rules
+      file:
+        path: "{{ item.path }}"
+        state: absent
+      with_items: "{{ files_to_delete.files }}"
+
+    - name: Allow ssh port '{{ ssh_port }}'.
+      ufw:
+        rule: allow
+        proto: tcp
+        port: '{{ ssh_port }}'
+        state: enabled
+
+    - name: Allow all access from microk8s networks to this host
+      community.general.ufw:
+        rule: allow
+        src: '{{ item }}'
+      loop:
+        - 10.1.0.0/16
+        - 10.11.12.0/24
+        - 10.152.183.0/24
+    
+    - name: Enable iptables forwarding
+      ansible.builtin.iptables:
+        chain: FORWARD
+        policy: ACCEPT
+
+    - name: Allow extra ports
+      when: port_list is defined
+      ufw:
+        rule: allow
+        proto: any
+        port: '{{ item }}'
+        state: enabled
+      loop: "{{ port_list }}"
+
+    - name: Turn UFW logging off
+      ufw:
+        logging: "off"
+  when: not k8s_host
+
+- name: Disable firewall for kubernetes machines
   ufw:
-    state: reset
-
-- name: Find backup rules to delete
-  find:
-    paths: /etc/ufw
-    patterns: "*.{{ cur_date }}_*"
-    use_regex: no
-  register: files_to_delete
-
-- name: Delete ufw backup rules
-  file:
-    path: "{{ item.path }}"
-    state: absent
-  with_items: "{{ files_to_delete.files }}"
-
-- name: Allow ssh port '{{ ssh_port }}'.
-  ufw:
-    rule: allow
-    proto: tcp
-    port: '{{ ssh_port }}'
-    state: enabled
-
-- name: Allow extra ports
-  when: port_list is defined
-  ufw:
-    rule: allow
-    proto: any
-    port: '{{ item }}'
-    state: enabled
-  loop: "{{ port_list }}"
-
-- name: Turn UFW logging off
-  ufw:
-    logging: "off"
+    state: disabled
+  when: k8s_host

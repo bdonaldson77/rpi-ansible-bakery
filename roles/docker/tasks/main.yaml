@@ -18,7 +18,13 @@
 - name: Install Docker Module for Python
   pip:
     name: docker
+
 - name: Check if a reboot is needed for Debian-based systems
   stat:
     path: /var/run/reboot-required
   register: reboot_required
+
+- name: Configure docker daemon per microk8s recommendations
+  copy:
+    dest: /etc/docker/daemon.json
+    content: "{{ lookup('file', 'daemon.json') }}"
